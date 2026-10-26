@@ -1610,11 +1610,13 @@ function ModelsView({ health }: { health: HealthResponse | null }) {
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div className="logo-icon" style={{ width: 40, height: 40, borderRadius: 8 }}>
-                <Zap size={20} />
-              </div>
+              <img
+                src="/logo.png"
+                alt="SafeSight Logo"
+                style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }}
+              />
               <div>
-                <strong style={{ fontSize: 15 }}>YOLOv8 Workplace Safety Model</strong>
+                <strong style={{ fontSize: 15 }}>YOLO Workplace Safety Model</strong>
                 <p style={{ color: 'var(--text-3)', fontSize: 12, marginTop: 2 }}>
                   File: <code>backend/models/best.pt</code>
                 </p>
