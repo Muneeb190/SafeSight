@@ -71,14 +71,16 @@ export type InspectionListResponse = {
   total: number
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || 'http://localhost:8080'
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || 'http://localhost:8080'
+const API_URL = rawApiUrl.trim().replace(/\/+$/, '')
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response
   try {
     response = await fetch(`${API_URL}${path}`, init)
-  } catch {
-    throw new Error(`Unable to reach the SafeSight backend at ${API_URL}. Ensure the FastAPI server is running on port 8080.`)
+  } catch (err) {
+    console.error(`[SafeSight API] Failed to fetch ${API_URL}${path}:`, err)
+    throw new Error(`Unable to reach the SafeSight backend at ${API_URL}. Ensure the FastAPI server is running.`)
   }
 
   if (!response.ok) {
