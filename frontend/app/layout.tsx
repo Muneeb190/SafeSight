@@ -5,22 +5,21 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'SafeSight AI | Workplace Safety Detection',
   description: 'AI-powered workplace safety detection for safer operations.',
-  generator: 'v0.app',
+  generator: 'SafeSight AI',
   icons: {
     icon: [
       {
         url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
+        sizes: '32x32',
+        type: 'image/png',
       },
       {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: '/logo.png',
+        sizes: '512x512',
+        type: 'image/png',
       },
     ],
+    shortcut: '/favicon.ico',
     apple: '/apple-icon.png',
   },
 }

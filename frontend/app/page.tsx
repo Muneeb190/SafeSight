@@ -120,10 +120,12 @@ function Sidebar({
   return (
     <aside className="sidebar">
       {/* Logo */}
-      <div className="sidebar-logo">
-        <div className="logo-icon">
-          <ShieldCheck size={15} strokeWidth={2.5} />
-        </div>
+      <div className="sidebar-logo" onClick={() => setView('landing')} style={{ cursor: 'pointer' }} title="Return to Home / About">
+        <img
+          src="/logo.png"
+          alt="SafeSight Logo"
+          className="logo-icon-img"
+        />
         <span className="logo-name">
           SafeSight <span>AI</span>
         </span>

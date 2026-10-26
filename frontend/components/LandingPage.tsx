@@ -41,9 +41,11 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
       <header className="landing-header">
         <div className="landing-header-inner">
           <div className="landing-brand" onClick={() => onEnterWorkspace('overview')}>
-            <div className="landing-logo-icon">
-              <ShieldCheck size={18} strokeWidth={2.5} />
-            </div>
+            <img
+              src="/logo.png"
+              alt="SafeSight Logo"
+              className="landing-logo-img"
+            />
             <span className="landing-brand-name">
               SafeSight <span>AI</span>
             </span>
@@ -640,9 +642,11 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
         <div className="landing-footer-inner">
           <div className="footer-col-brand">
             <div className="landing-brand">
-              <div className="landing-logo-icon">
-                <ShieldCheck size={16} strokeWidth={2.5} />
-              </div>
+              <img
+                src="/logo.png"
+                alt="SafeSight Logo"
+                className="landing-logo-img"
+              />
               <span className="landing-brand-name">
                 SafeSight <span>AI</span>
               </span>

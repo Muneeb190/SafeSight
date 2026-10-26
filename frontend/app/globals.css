@@ -68,6 +68,14 @@ a { text-decoration: none; color: inherit; }
   color: #fff;
   flex-shrink: 0;
 }
+.logo-icon-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
 .logo-name { font-size: 15px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
 .logo-name span { color: var(--text-3); font-weight: 400; font-size: 11px; margin-left: 5px; border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
 
@@ -784,6 +792,14 @@ tr:hover td { background: var(--surface); }
   place-items: center;
   color: #fff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.landing-logo-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 .landing-brand-name {
   font-size: 17px;
