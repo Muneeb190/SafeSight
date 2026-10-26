@@ -1,0 +1,14 @@
+.git
+.local
+.conversation
+node_modules
+**/node_modules
+.pythonlibs
+.venv
+__pycache__
+**/__pycache__
+.pytest_cache
+.env
+tests
+attached_assets
+tmp

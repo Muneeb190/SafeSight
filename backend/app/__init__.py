@@ -1,0 +1,1 @@
+"""SafeSight AI API package."""

@@ -1,0 +1,13 @@
+{
+  "name": "safesight",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SafeSight AI - Workplace Safety Detection System",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "powershell -Command \"backend\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8080 --reload\"",
+    "build:frontend": "npm --prefix frontend run build",
+    "test:backend": "powershell -Command \"backend\\.venv\\Scripts\\python.exe -m pytest\""
+  }
+}

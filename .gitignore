@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+.pythonlibs/
+
+# Build and cache
+.next/
+dist/
+build/
+out/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.turbo/
+.cache/
+
+# Model checkpoints (weights)
+*.pt
+*.onnx
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Internal / Scratch / Conversation
+.conversation/
