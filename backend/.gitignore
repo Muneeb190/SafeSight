@@ -23,7 +23,9 @@ __pycache__/
 .pytest_cache/
 .env
 models/*.pt
+!models/best.pt
 models/*.onnx
+!models/.gitkeep
 
 # IDEs and editors
 /.idea

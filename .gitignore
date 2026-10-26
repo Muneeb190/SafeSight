@@ -18,7 +18,9 @@ __pycache__/
 
 # Model checkpoints (weights)
 *.pt
+!backend/models/best.pt
 *.onnx
+!backend/models/.gitkeep
 
 # Environment variables
 .env
