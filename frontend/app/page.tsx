@@ -24,11 +24,13 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   Upload,
   X,
   Zap,
   ZoomIn,
 } from 'lucide-react'
+import LandingPage from '@/components/LandingPage'
 import {
   api,
   type HealthResponse,
@@ -39,7 +41,7 @@ import {
 } from '@/src/api'
 
 /* ─── Types ─── */
-type View = 'overview' | 'image' | 'video' | 'webcam' | 'history' | 'models'
+type View = 'landing' | 'overview' | 'image' | 'video' | 'webcam' | 'history' | 'models'
 
 /* ─── Helpers ─── */
 function confClass(conf: number) {
@@ -96,6 +98,7 @@ function ObjectIcon({ className }: { className: string }) {
 
 /* ─── Sidebar ─── */
 const navItems: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: 'landing', label: 'Home / About', icon: Sparkles },
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'image', label: 'Image analysis', icon: ImageIcon },
   { id: 'video', label: 'Video analysis', icon: FileVideo },
@@ -165,10 +168,14 @@ function Sidebar({
           </div>
         </div>
 
-        <div className="sidebar-item" style={{ marginTop: 4 }}>
+        <button
+          className="sidebar-item"
+          style={{ marginTop: 4 }}
+          onClick={() => setView('landing')}
+        >
           <HelpCircle size={15} className="item-icon" />
-          Safety workspace
-        </div>
+          Safety workspace guide
+        </button>
 
         <div className="user-row">
           <div className="user-avatar">SS</div>
@@ -1640,7 +1647,7 @@ function ModelsView({ health }: { health: HealthResponse | null }) {
 
 /* ─── Root Component ─── */
 export default function Page() {
-  const [view, setView] = useState<View>('overview')
+  const [view, setView] = useState<View>('landing')
   const [health, setHealth] = useState<HealthResponse | null>(null)
   const [inspections, setInspections] = useState<Inspection[]>([])
   const [histLoading, setHistLoading] = useState(false)
@@ -1673,6 +1680,7 @@ export default function Page() {
 
   // Breadcrumb mapping
   const breadcrumbs: Record<View, string> = {
+    landing: 'Home / About',
     overview: 'Overview',
     image: 'Image analysis',
     video: 'Video analysis',
@@ -1682,6 +1690,15 @@ export default function Page() {
   }
 
   const modelOk = health?.model_loaded
+
+  if (view === 'landing') {
+    return (
+      <LandingPage
+        health={health}
+        onEnterWorkspace={(targetView) => setView(targetView || 'overview')}
+      />
+    )
+  }
 
   return (
     <div className="app-shell">
@@ -1698,6 +1715,15 @@ export default function Page() {
             <strong>{breadcrumbs[view]}</strong>
           </div>
           <div className="topbar-right">
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '4px 10px', fontSize: '11.5px', gap: '5px' }}
+              title="About SafeSight & System Guide"
+              onClick={() => setView('landing')}
+            >
+              <Sparkles size={13} />
+              <span>About &amp; Guide</span>
+            </button>
             <div className="sys-status">
               <span className={`status-dot ${!health ? 'red' : modelOk ? '' : 'amber'}`} />
               {!health ? 'Backend offline' : modelOk ? 'All systems operational' : 'Model weights missing'}
