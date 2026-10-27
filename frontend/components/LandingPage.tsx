@@ -19,8 +19,6 @@ import {
   Sparkles,
   ExternalLink,
   ChevronRight,
-  Layers,
-  Cpu,
   BarChart3,
   Lock,
 } from 'lucide-react'
@@ -56,7 +54,6 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
             <a href="#modes">Detection Modes</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#what-to-expect">What to Expect</a>
-            <a href="#architecture">Tech Stack</a>
           </nav>
 
           <div className="landing-header-actions">
@@ -543,68 +540,6 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
                 <strong>Privacy by default:</strong> Live webcam inspection frames are processed on-the-fly without saving personal identity records to disk.
               </li>
             </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Architecture Section ─── */}
-      <section id="architecture" className="landing-section">
-        <div className="section-header">
-          <div className="section-pill">Modern Architecture</div>
-          <h2 className="section-title">Engineered for Scalability &amp; Reliability</h2>
-          <p className="section-subtitle">
-            A modern, decoupled full-stack platform built with production-grade tools.
-          </p>
-        </div>
-
-        <div className="arch-diagram">
-          <div className="arch-card">
-            <div className="arch-card-header">
-              <Layers size={18} />
-              <span>Next.js 16 Frontend</span>
-            </div>
-            <p>React 19, Turbopack, Lucide Icons, and responsive Vanilla CSS. Deployed on Vercel with zero cold starts.</p>
-            <div className="arch-tags">
-              <span>Next.js 16</span>
-              <span>React 19</span>
-              <span>Turbopack</span>
-            </div>
-          </div>
-
-          <div className="arch-arrow">
-            <ArrowRight size={20} />
-            <span>REST API</span>
-          </div>
-
-          <div className="arch-card">
-            <div className="arch-card-header">
-              <Cpu size={18} />
-              <span>FastAPI Backend</span>
-            </div>
-            <p>Python 3.12, Uvicorn, OpenCV, and rate-limiting. High-throughput container deployed on Railway.</p>
-            <div className="arch-tags">
-              <span>FastAPI</span>
-              <span>Python 3.12</span>
-              <span>OpenCV</span>
-            </div>
-          </div>
-
-          <div className="arch-arrow">
-            <ArrowRight size={20} />
-            <span>Inference</span>
-          </div>
-
-          <div className="arch-card">
-            <div className="arch-card-header">
-              <Zap size={18} />
-              <span>YOLO Neural Engine</span>
-            </div>
-            <p>Ultralytics YOLO checkpoint (<code>best.pt</code>) loaded in-memory for sub-100ms multi-class object detection.</p>
-            <div className="arch-tags">
-              <span>Ultralytics YOLO</span>
-              <span>PyTorch</span>
-              <span>best.pt</span>
-            </div>
           </div>
         </div>
       </section>
