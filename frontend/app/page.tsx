@@ -156,8 +156,8 @@ function Sidebar({
             {!health
               ? 'Offline — start FastAPI server'
               : modelOk
-              ? 'Model loaded · Ready'
-              : 'Connected · Model weights missing'}
+                ? 'Model loaded · Ready'
+                : 'Connected · Model weights missing'}
           </div>
           <div className="usage-bar-wrap">
             <div
@@ -757,10 +757,10 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
                       <div className="overview-value">
                         {detections.length
                           ? `${Math.round(
-                              (detections.reduce((s, d) => s + d.confidence, 0) /
-                                detections.length) *
-                                100
-                            )}`
+                            (detections.reduce((s, d) => s + d.confidence, 0) /
+                              detections.length) *
+                            100
+                          )}`
                           : '—'}
                         <small>%</small>
                       </div>
@@ -1422,8 +1422,8 @@ function WebcamView() {
                         style={{
                           color:
                             last?.safety_assessment &&
-                            typeof last.safety_assessment === 'object' &&
-                            last.safety_assessment.violations?.length
+                              typeof last.safety_assessment === 'object' &&
+                              last.safety_assessment.violations?.length
                               ? 'var(--red)'
                               : 'var(--text)',
                         }}

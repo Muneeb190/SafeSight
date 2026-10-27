@@ -79,7 +79,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${API_URL}${path}`, init)
   } catch (err) {
-    console.error(`[SafeSight API] Failed to fetch ${API_URL}${path}:`, err)
+    console.warn(`[SafeSight API] Failed to fetch ${API_URL}${path}:`, err)
     throw new Error(`Unable to reach the SafeSight backend at ${API_URL}. Ensure the FastAPI server is running.`)
   }
 
