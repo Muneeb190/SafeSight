@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Image as ImageIcon,
   LayoutDashboard,
+  Menu,
   MoreHorizontal,
   Plus,
   RefreshCw,
@@ -58,8 +59,8 @@ function isViolation(className: string) {
   )
 }
 
-function getAssessmentInfo(a?: SafetyAssessment | string): {
-  level: 'safe' | 'violation' | 'warning' | 'unknown'
+function getAssessmentInfo(a?: SafetyAssessment | string, detectionsCount: number = 0): {
+  level: 'safe' | 'violation' | 'warning' | 'neutral' | 'unknown'
   title: string
   detail: string
 } {
@@ -70,6 +71,13 @@ function getAssessmentInfo(a?: SafetyAssessment | string): {
     return { level: 'violation', title: 'Potential violation detected', detail: v }
   }
   if (a.status === 'no_supported_violation_detected') {
+    if (detectionsCount === 0) {
+      return {
+        level: 'neutral',
+        title: 'No personnel detected',
+        detail: 'Zero worker or PPE detections in frame. Safety compliance unverified.',
+      }
+    }
     return { level: 'safe', title: 'No violations detected', detail: 'Worker appears compliant. Human review recommended.' }
   }
   if (a.status === 'unsupported') {
@@ -120,7 +128,14 @@ function Sidebar({
   return (
     <aside className="sidebar">
       {/* Logo */}
-      <div className="sidebar-logo" onClick={() => setView('landing')} style={{ cursor: 'pointer' }} title="Return to Home / About">
+      <button
+        type="button"
+        className="sidebar-logo"
+        onClick={() => setView('landing')}
+        title="Return to Home / About"
+        aria-label="Return to SafeSight Home"
+        style={{ width: '100%', textAlign: 'left', background: 'transparent' }}
+      >
         <img
           src="/logo.png"
           alt="SafeSight Logo"
@@ -129,7 +144,7 @@ function Sidebar({
         <span className="logo-name">
           SafeSight <span>AI</span>
         </span>
-      </div>
+      </button>
 
       {/* Navigation section */}
       <div className="sidebar-section">
@@ -164,7 +179,7 @@ function Sidebar({
               className="usage-bar"
               style={{
                 width: !health ? '0%' : modelOk ? '100%' : '50%',
-                background: !health ? '#ef4444' : modelOk ? undefined : '#f59e0b',
+                background: !health ? 'var(--red)' : modelOk ? undefined : 'var(--amber)',
               }}
             />
           </div>
@@ -296,7 +311,12 @@ function OverviewView({
 
       {/* Quick Launch Cards */}
       <div className="quick-actions-grid">
-        <div className="action-card" onClick={() => setView('image')}>
+        <button
+          type="button"
+          className="action-card"
+          onClick={() => setView('image')}
+          aria-label="Open image analysis"
+        >
           <div className="action-card-icon">
             <ImageIcon size={20} />
           </div>
@@ -305,10 +325,15 @@ function OverviewView({
             <span className="action-card-desc">Inspect site photos with annotated PPE bounding boxes</span>
           </div>
           <ArrowRight size={16} className="action-card-arrow" />
-        </div>
+        </button>
 
-        <div className="action-card" onClick={() => setView('video')}>
-          <div className="action-card-icon" style={{ background: '#ede9fe', color: '#6d28d9' }}>
+        <button
+          type="button"
+          className="action-card"
+          onClick={() => setView('video')}
+          aria-label="Open video analysis"
+        >
+          <div className="action-card-icon" style={{ background: 'var(--purple-soft)', color: 'var(--purple)' }}>
             <FileVideo size={20} />
           </div>
           <div>
@@ -316,10 +341,15 @@ function OverviewView({
             <span className="action-card-desc">Process CCTV and bodycam footage frame-by-frame</span>
           </div>
           <ArrowRight size={16} className="action-card-arrow" />
-        </div>
+        </button>
 
-        <div className="action-card" onClick={() => setView('webcam')}>
-          <div className="action-card-icon" style={{ background: '#fef3c7', color: '#b45309' }}>
+        <button
+          type="button"
+          className="action-card"
+          onClick={() => setView('webcam')}
+          aria-label="Open live webcam inspection"
+        >
+          <div className="action-card-icon" style={{ background: 'var(--amber-soft)', color: 'var(--amber-dark)' }}>
             <Camera size={20} />
           </div>
           <div>
@@ -327,7 +357,7 @@ function OverviewView({
             <span className="action-card-desc">Stream live camera feed with real-time PPE check</span>
           </div>
           <ArrowRight size={16} className="action-card-arrow" />
-        </div>
+        </button>
       </div>
 
       {/* Two-column Detail Cards */}
@@ -336,14 +366,20 @@ function OverviewView({
         <div className="panel-card">
           <div className="panel-card-header">
             <span className="panel-card-title">Recent Inspections</span>
-            <span className="panel-card-link" onClick={() => setView('history')}>
+            <button
+              type="button"
+              className="panel-card-link"
+              onClick={() => setView('history')}
+              aria-label="View all inspection history"
+              style={{ background: 'none', border: 'none', padding: 0 }}
+            >
               View all <ChevronRight size={12} />
-            </span>
+            </button>
           </div>
           <div style={{ flex: 1, overflowX: 'auto' }}>
             {inspections.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-4)' }}>
-                <Clock size={28} strokeWidth={1} style={{ margin: '0 auto 8px', color: 'var(--border-2)' }} />
+                <Clock size={28} strokeWidth={1} style={{ margin: '0 auto 8px', color: 'var(--icon-muted)' }} />
                 <p style={{ fontSize: 12, color: 'var(--text-3)' }}>No inspections recorded yet.</p>
                 <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 4 }}>
                   Run an image or video inspection to view results here.
@@ -361,18 +397,32 @@ function OverviewView({
                 </thead>
                 <tbody>
                   {inspections.slice(0, 6).map((item, i) => {
-                    const hasViolations =
-                      typeof item.safety_assessment === 'object' && item.safety_assessment?.violations?.length
+                    const objCount = item.detections?.length ?? item.detected_objects ?? 0
+                    const info = getAssessmentInfo(item.safety_assessment, objCount)
+                    const tagClass = info.level === 'violation' ? 'tag-red' : info.level === 'neutral' ? 'tag-gray' : 'tag-green'
                     return (
-                      <tr key={item.inspection_id ?? i}>
+                      <tr
+                        key={item.inspection_id ?? i}
+                        className="clickable-row"
+                        role="button"
+                        tabIndex={0}
+                        aria-label="View history"
+                        onClick={() => setView('history')}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            setView('history')
+                          }
+                        }}
+                      >
                         <td>{item.created_at ? new Date(item.created_at).toLocaleTimeString() : 'Recent'}</td>
                         <td>
                           <span className="tag tag-gray">{item.source || 'image'}</span>
                         </td>
-                        <td>{item.detections?.length ?? item.detected_objects ?? 0}</td>
+                        <td>{objCount}</td>
                         <td>
-                          <span className={`tag ${hasViolations ? 'tag-red' : 'tag-green'}`}>
-                            {hasViolations ? 'Violation' : 'Compliant'}
+                          <span className={`tag ${tagClass}`}>
+                            {info.level === 'violation' ? 'Violation' : info.level === 'neutral' ? 'Unverified' : 'Clear'}
                           </span>
                         </td>
                       </tr>
@@ -387,14 +437,14 @@ function OverviewView({
         {/* PPE Rules & Detection Overview */}
         <div className="panel-card">
           <div className="panel-card-header">
-            <span className="panel-card-title">Required PPE Compliance</span>
-            <span className="tag tag-green">OSHA Standard</span>
+            <span className="panel-card-title">Site PPE Policy Benchmarks</span>
+            <span className="tag tag-gray">OSHA / ANSI</span>
           </div>
           <div className="compliance-list">
             <div className="compliance-item">
               <div className="compliance-item-header">
                 <span>Hard Hat / Helmet</span>
-                <span>Mandatory</span>
+                <span className="tag tag-green">100% Mandatory</span>
               </div>
               <div className="compliance-bar-bg">
                 <div className="compliance-bar-fill" style={{ width: '100%', background: 'var(--green)' }} />
@@ -404,7 +454,7 @@ function OverviewView({
             <div className="compliance-item">
               <div className="compliance-item-header">
                 <span>High-Visibility Safety Vest</span>
-                <span>Mandatory</span>
+                <span className="tag tag-green">100% Mandatory</span>
               </div>
               <div className="compliance-bar-bg">
                 <div className="compliance-bar-fill" style={{ width: '100%', background: 'var(--green)' }} />
@@ -413,8 +463,8 @@ function OverviewView({
 
             <div className="compliance-item">
               <div className="compliance-item-header">
-                <span>Protective Boots</span>
-                <span>Required</span>
+                <span>Steel-Toe Safety Boots</span>
+                <span className="tag tag-gray">Active Zones</span>
               </div>
               <div className="compliance-bar-bg">
                 <div className="compliance-bar-fill" style={{ width: '85%', background: 'var(--green)' }} />
@@ -423,18 +473,8 @@ function OverviewView({
 
             <div className="compliance-item">
               <div className="compliance-item-header">
-                <span>Safety Gloves</span>
-                <span>Required</span>
-              </div>
-              <div className="compliance-bar-bg">
-                <div className="compliance-bar-fill" style={{ width: '75%', background: 'var(--green)' }} />
-              </div>
-            </div>
-
-            <div className="compliance-item">
-              <div className="compliance-item-header">
-                <span>Eye / Glasses Protection</span>
-                <span>Zone dependent</span>
+                <span>Eye &amp; Face Protection</span>
+                <span className="tag tag-gray">Hazard Dependent</span>
               </div>
               <div className="compliance-bar-bg">
                 <div className="compliance-bar-fill" style={{ width: '70%', background: 'var(--green)' }} />
@@ -456,6 +496,8 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 })
   const [showBoxes, setShowBoxes] = useState(true)
   const [zoom, setZoom] = useState(100)
   const [drag, setDrag] = useState(false)
@@ -465,6 +507,8 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
     setFile(f)
     setResult(null)
     setSelectedIdx(null)
+    setHoveredIdx(null)
+    setImageDimensions({ width: 0, height: 0 })
     setError('')
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(URL.createObjectURL(f))
@@ -476,6 +520,7 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
     setError('')
     setResult(null)
     setSelectedIdx(null)
+    setHoveredIdx(null)
     try {
       const res = await api.detectImage(file, confidence, true)
       setResult(res)
@@ -496,7 +541,7 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
   }
 
   const detections: Detection[] = result?.detections || []
-  const assessment = getAssessmentInfo(result?.safety_assessment)
+  const assessment = getAssessmentInfo(result?.safety_assessment, detections.length)
   const pct = Math.round(confidence * 100)
   const modelOk = health?.model_loaded
   const selected = selectedIdx !== null ? detections[selectedIdx] : null
@@ -523,7 +568,7 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
           )}
           <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()}>
             <Plus size={14} />
-            Upload image
+            {file ? 'Replace image' : 'Upload image'}
           </button>
           <input
             ref={fileInputRef}
@@ -552,6 +597,7 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
                 <label className="toggle">
                   <input
                     type="checkbox"
+                    aria-label="Toggle bounding boxes visibility"
                     checked={showBoxes}
                     onChange={(e) => setShowBoxes(e.target.checked)}
                   />
@@ -567,6 +613,15 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
                 >
                   <ZoomIn size={13} />
                 </button>
+                <button
+                  className="btn btn-secondary"
+                  style={{ height: 28, fontSize: 11, padding: '0 8px' }}
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Choose a different image"
+                >
+                  <Upload size={12} />
+                  Replace
+                </button>
               </div>
             </div>
           )}
@@ -576,17 +631,132 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
             {previewUrl ? (
               <div
                 className="canvas-img-wrap"
-                style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center' }}
+                style={{
+                  position: 'relative',
+                  display: 'inline-block',
+                  transform: `scale(${zoom / 100})`,
+                  transformOrigin: 'center center',
+                }}
               >
                 <img
                   src={result && showBoxes ? api.annotatedImageUrl(result) : previewUrl}
                   alt="Inspection target"
+                  onLoad={(e) => {
+                    const img = e.currentTarget
+                    setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight })
+                  }}
                 />
+                {imageDimensions.width > 0 && showBoxes && detections.length > 0 && (
+                  <svg
+                    viewBox={`0 0 ${imageDimensions.width} ${imageDimensions.height}`}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {detections.map((det, idx) => {
+                      const [x1, y1, x2, y2] = det.box || [0, 0, 0, 0]
+                      const isSelected = selectedIdx === idx
+                      const isHovered = hoveredIdx === idx
+                      const violation = isViolation(det.class_name)
+                      if (x2 <= x1 || y2 <= y1) return null
+
+                      return (
+                        <g
+                          key={idx}
+                          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                          onClick={() => setSelectedIdx(isSelected ? null : idx)}
+                          onMouseEnter={() => setHoveredIdx(idx)}
+                          onMouseLeave={() => setHoveredIdx(null)}
+                        >
+                          {(isSelected || isHovered) && (
+                            <>
+                              <rect
+                                x={x1 - 3}
+                                y={y1 - 3}
+                                width={x2 - x1 + 6}
+                                height={y2 - y1 + 6}
+                                fill={violation ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}
+                                stroke={isSelected ? '#38bdf8' : violation ? '#ef4444' : '#10b981'}
+                                strokeWidth={isSelected ? 4 : 2}
+                                strokeDasharray={isSelected ? '6,3' : undefined}
+                                rx={4}
+                              />
+                              <rect
+                                x={x1}
+                                y={Math.max(0, y1 - 24)}
+                                width={Math.max(80, (det.class_name.length + 6) * 9)}
+                                height={22}
+                                fill={isSelected ? '#0284c7' : violation ? '#dc2626' : '#059669'}
+                                rx={3}
+                              />
+                              <text
+                                x={x1 + 6}
+                                y={Math.max(0, y1 - 24) + 15}
+                                fill="#ffffff"
+                                fontSize={12}
+                                fontWeight={600}
+                                fontFamily="system-ui, sans-serif"
+                              >
+                                {det.class_name} {Math.round(det.confidence * 100)}%
+                              </text>
+                            </>
+                          )}
+                        </g>
+                      )
+                    })}
+                  </svg>
+                )}
               </div>
             ) : (
-              <div className="empty-stage">
-                <ImageIcon size={36} strokeWidth={1} style={{ color: '#c0c0b0' }} />
-                <p>Upload an image to start PPE detection</p>
+              <div
+                className={`drop-zone-panel ${drag ? 'drag-over' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-label="Drop an image here, or browse your files"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    fileInputRef.current?.click()
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setDrag(true)
+                }}
+                onDragLeave={() => setDrag(false)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setDrag(false)
+                  const f = e.dataTransfer.files[0]
+                  if (f) selectFile(f)
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                style={{ margin: 24, alignSelf: 'center', width: 'calc(100% - 48px)' }}
+              >
+                <div className="drop-icon-circle">
+                  <Upload size={17} />
+                </div>
+                <div className="drop-text">
+                  <strong>Drop an image here, or browse your files</strong>
+                  <p>JPG, PNG or WebP · Up to 10 MB</p>
+                </div>
+                <div className="drop-browse">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      fileInputRef.current?.click()
+                    }}
+                  >
+                    <FileImage size={13} />
+                    Browse files
+                  </button>
+                </div>
               </div>
             )}
 
@@ -599,9 +769,21 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
 
             {previewUrl && (
               <div className="zoom-bar">
-                <button onClick={() => setZoom((z) => Math.max(z - 15, 40))}>−</button>
+                <button
+                  type="button"
+                  aria-label="Zoom out"
+                  onClick={() => setZoom((z) => Math.max(z - 15, 40))}
+                >
+                  −
+                </button>
                 <span>{zoom}%</span>
-                <button onClick={() => setZoom((z) => Math.min(z + 15, 200))}>+</button>
+                <button
+                  type="button"
+                  aria-label="Zoom in"
+                  onClick={() => setZoom((z) => Math.min(z + 15, 200))}
+                >
+                  +
+                </button>
               </div>
             )}
           </div>
@@ -643,43 +825,6 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
               </div>
             </div>
           )}
-
-          {/* Upload drop zone */}
-          <div
-            className={`drop-zone-panel ${drag ? 'drag-over' : ''}`}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDrag(true)
-            }}
-            onDragLeave={() => setDrag(false)}
-            onDrop={(e) => {
-              e.preventDefault()
-              setDrag(false)
-              const f = e.dataTransfer.files[0]
-              if (f) selectFile(f)
-            }}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <div className="drop-icon-circle">
-              <Upload size={17} />
-            </div>
-            <div className="drop-text">
-              <strong>{file ? 'Click to select a different image' : 'Drop an image here, or browse your files'}</strong>
-              <p>JPG, PNG or WebP · Up to 10 MB</p>
-            </div>
-            <div className="drop-browse">
-              <button
-                className="btn btn-secondary"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  fileInputRef.current?.click()
-                }}
-              >
-                <FileImage size={13} />
-                Browse files
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* ── Right Panel: Results Directly (No Settings Tab) ── */}
@@ -704,6 +849,11 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
               <input
                 type="range"
                 className="conf-slider"
+                aria-label="Detection confidence threshold"
+                aria-valuemin={5}
+                aria-valuemax={95}
+                aria-valuenow={pct}
+                aria-valuetext={`${pct}% confidence`}
                 min={0.05}
                 max={0.95}
                 step={0.05}
@@ -783,11 +933,13 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
                 <div className={`assessment-banner ${assessment.level}`}>
                   <div>
                     {assessment.level === 'violation' ? (
-                      <ShieldAlert size={13} />
+                      <ShieldAlert size={14} />
                     ) : assessment.level === 'safe' ? (
-                      <ShieldCheck size={13} />
+                      <ShieldCheck size={14} />
+                    ) : assessment.level === 'neutral' ? (
+                      <HelpCircle size={14} />
                     ) : (
-                      <AlertTriangle size={13} />
+                      <AlertTriangle size={14} />
                     )}
                   </div>
                   <div>
@@ -822,8 +974,19 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
                       return (
                         <div
                           key={i}
-                          className={`object-item ${violation ? 'violation' : ''} ${selectedIdx === origIdx ? 'selected' : ''}`}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Detection: ${det.class_name}, ${Math.round(det.confidence * 100)}% confidence`}
+                          className={`object-item ${violation ? 'violation' : ''} ${selectedIdx === origIdx ? 'selected' : ''} ${hoveredIdx === origIdx ? 'hovered' : ''}`}
                           onClick={() => setSelectedIdx(selectedIdx === origIdx ? null : origIdx)}
+                          onMouseEnter={() => setHoveredIdx(origIdx)}
+                          onMouseLeave={() => setHoveredIdx(null)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setSelectedIdx(selectedIdx === origIdx ? null : origIdx)
+                            }
+                          }}
                         >
                           <div className="object-icon">
                             <ObjectIcon className={det.class_name} />
@@ -834,10 +997,11 @@ function ImageAnalysisView({ health }: { health: HealthResponse | null }) {
                           </span>
                           <button
                             className="eye-btn btn"
-                            style={{ width: 22, height: 22, padding: 0 }}
+                            style={{ width: 28, height: 28, minWidth: 28, minHeight: 28, padding: 0 }}
+                            aria-label={`Inspect ${det.class_name} detection`}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Eye size={12} />
+                            <Eye size={13} />
                           </button>
                         </div>
                       )
@@ -940,7 +1104,18 @@ function VideoAnalysisView({ health }: { health: HealthResponse | null }) {
   const [videoUrl, setVideoUrl] = useState('')
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+  const mountedRef = useRef(true)
   const modelOk = health?.model_loaded
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      // Abort any in-flight video polling when the view unmounts
+      abortRef.current?.abort()
+    }
+  }, [])
 
   const selectFile = (f: File) => {
     setFile(f)
@@ -950,6 +1125,11 @@ function VideoAnalysisView({ health }: { health: HealthResponse | null }) {
 
   const run = async () => {
     if (!file) return
+    // Cancel previous run if still polling
+    abortRef.current?.abort()
+    abortRef.current = new AbortController()
+    const signal = abortRef.current.signal
+
     setLoading(true)
     setProgress(0)
     setError('')
@@ -957,17 +1137,24 @@ function VideoAnalysisView({ health }: { health: HealthResponse | null }) {
     if (videoUrl) URL.revokeObjectURL(videoUrl)
     try {
       const blob = await api.detectVideo(file, (job) => {
+        if (signal.aborted || !mountedRef.current) return
         setProgress(Math.round(job.progress))
         if (job.status === 'processing') setStatusText(`Processing: ${job.frames_processed}/${job.total_frames || '?'} frames`)
         else if (job.status === 'queued') setStatusText('Queued…')
         else if (job.status === 'completed') setStatusText('Finalizing…')
       })
-      setVideoUrl(URL.createObjectURL(blob))
+      if (!signal.aborted && mountedRef.current) {
+        setVideoUrl(URL.createObjectURL(blob))
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Video processing failed.')
+      if (!signal.aborted && mountedRef.current) {
+        setError(e instanceof Error ? e.message : 'Video processing failed.')
+      }
     } finally {
-      setLoading(false)
-      setStatusText('')
+      if (mountedRef.current) {
+        setLoading(false)
+        setStatusText('')
+      }
     }
   }
 
@@ -1061,10 +1248,52 @@ function VideoAnalysisView({ health }: { health: HealthResponse | null }) {
                 </div>
                 <span style={{ fontSize: 11, color: 'var(--text-4)' }}>{progress}% complete</span>
               </div>
+            ) : file ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 30, color: 'var(--text-3)' }}>
+                <FileVideo size={42} strokeWidth={1.5} style={{ color: 'var(--primary-btn)' }} />
+                <p style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{file.name}</p>
+                <p style={{ fontSize: 12 }}>Ready for processing. Click &quot;Process video&quot; in the right panel.</p>
+              </div>
             ) : (
-              <div className="empty-stage">
-                <FileVideo size={36} strokeWidth={1} style={{ color: '#c0c0b0' }} />
-                <p>Upload an MP4 video to begin frame-by-frame analysis</p>
+              <div
+                className="drop-zone-panel"
+                role="button"
+                tabIndex={0}
+                aria-label="Drop your MP4 video here, or browse files"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    fileInputRef.current?.click()
+                  }
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const f = e.dataTransfer.files[0]
+                  if (f) selectFile(f)
+                }}
+                style={{ margin: 24, alignSelf: 'center', width: 'calc(100% - 48px)' }}
+              >
+                <div className="drop-icon-circle">
+                  <Upload size={17} />
+                </div>
+                <div className="drop-text">
+                  <strong>Drop your MP4 video here, or browse files</strong>
+                  <p>MP4, AVI or MOV · Up to 200 MB</p>
+                </div>
+                <div className="drop-browse">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      fileInputRef.current?.click()
+                    }}
+                  >
+                    <FileVideo size={13} />
+                    Browse files
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -1082,37 +1311,6 @@ function VideoAnalysisView({ health }: { health: HealthResponse | null }) {
               <code>backend/models/best.pt</code>
             </div>
           )}
-
-          <div
-            className="drop-zone-panel"
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault()
-              const f = e.dataTransfer.files[0]
-              if (f) selectFile(f)
-            }}
-          >
-            <div className="drop-icon-circle">
-              <Upload size={17} />
-            </div>
-            <div className="drop-text">
-              <strong>{file ? 'Click to choose another video' : 'Drop your MP4 video here, or browse files.'}</strong>
-              <p>MP4, AVI or MOV · Up to 200 MB</p>
-            </div>
-            <div className="drop-browse">
-              <button
-                className="btn btn-secondary"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  fileInputRef.current?.click()
-                }}
-              >
-                <FileVideo size={13} />
-                Browse files
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Right Panel: Video Results Directly */}
@@ -1192,9 +1390,11 @@ function WebcamView() {
   const streamRef = useRef<MediaStream | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const busyRef = useRef(false)
+  // Store frame as an object URL (not a base64/data URL) to avoid large string in React state
+  const frameObjUrlRef = useRef<string>('')
   const [running, setRunning] = useState(false)
   const [interval, setIntervalMs] = useState(1500)
-  const [frame, setFrame] = useState('')
+  const [frameUrl, setFrameUrl] = useState('')
   const [last, setLast] = useState<ImageDetectionResponse | null>(null)
   const [error, setError] = useState('')
 
@@ -1203,6 +1403,11 @@ function WebcamView() {
     streamRef.current?.getTracks().forEach((t) => t.stop())
     streamRef.current = null
     setRunning(false)
+  }, [])
+
+  // Revoke object URL on unmount
+  useEffect(() => () => {
+    if (frameObjUrlRef.current) URL.revokeObjectURL(frameObjUrlRef.current)
   }, [])
 
   const capture = useCallback(async () => {
@@ -1218,7 +1423,24 @@ function WebcamView() {
       if (!blob) return
       const res = await api.detectImage(new File([blob], 'webcam.jpg', { type: 'image/jpeg' }), 0.5)
       setLast(res)
-      setFrame(api.annotatedImageUrl(res))
+      // Use object URL from the returned annotated image URL (already a data URL from API);
+      // create a blob from it to keep memory clean, or just set as a display URL without storing the base64 in state
+      const annotated = api.annotatedImageUrl(res)
+      if (annotated) {
+        // Revoke the previous object URL before setting the new one
+        if (frameObjUrlRef.current) URL.revokeObjectURL(frameObjUrlRef.current)
+        // If annotated is already a data: URL (base64), convert to a Blob URL for clean state
+        if (annotated.startsWith('data:')) {
+          const resp = await fetch(annotated)
+          const imgBlob = await resp.blob()
+          const objUrl = URL.createObjectURL(imgBlob)
+          frameObjUrlRef.current = objUrl
+          setFrameUrl(objUrl)
+        } else {
+          frameObjUrlRef.current = ''
+          setFrameUrl(annotated)
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Webcam detection failed.')
     } finally {
@@ -1251,7 +1473,7 @@ function WebcamView() {
   }, [capture, interval, running])
 
   const detections = last?.detections ?? []
-  const assessment = getAssessmentInfo(last?.safety_assessment)
+  const assessment = getAssessmentInfo(last?.safety_assessment, detections.length)
 
   return (
     <>
@@ -1352,9 +1574,9 @@ function WebcamView() {
           )}
 
           <div className="image-canvas">
-            {frame ? (
+            {frameUrl ? (
               <div className="canvas-img-wrap">
-                <img src={frame} alt="Annotated webcam frame" />
+                <img src={frameUrl} alt="Annotated webcam frame" />
               </div>
             ) : (
               <video
@@ -1368,10 +1590,10 @@ function WebcamView() {
                 }}
               />
             )}
-            {!running && !frame && (
+            {!running && !frameUrl && (
               <div className="empty-stage">
-                <Camera size={36} strokeWidth={1} style={{ color: '#c0c0b0' }} />
-                <p>Click "Start camera" to begin live monitoring</p>
+                <Camera size={36} strokeWidth={1} style={{ color: 'var(--icon-muted)' }} />
+                <p>Click &quot;Start camera&quot; to begin live monitoring</p>
               </div>
             )}
             <canvas ref={canvasRef} hidden />
@@ -1383,8 +1605,21 @@ function WebcamView() {
               {error}
             </div>
           )}
-          {!running && !frame && (
-            <div className="drop-zone-panel" onClick={start} style={{ cursor: 'pointer' }}>
+          {!running && !frameUrl && (
+            <div
+              className="drop-zone-panel"
+              role="button"
+              tabIndex={0}
+              aria-label="Start camera monitoring"
+              onClick={start}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  start()
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="drop-icon-circle">
                 <Camera size={17} />
               </div>
@@ -1436,12 +1671,20 @@ function WebcamView() {
                   </div>
                 </div>
 
-                <div className={`assessment-banner ${assessment.level}`}>
+                <div
+                  className={`assessment-banner ${assessment.level}`}
+                  role={assessment.level === 'violation' ? 'alert' : 'status'}
+                  aria-live={assessment.level === 'violation' ? 'assertive' : 'polite'}
+                >
                   <div>
                     {assessment.level === 'violation' ? (
-                      <ShieldAlert size={13} />
+                      <ShieldAlert size={14} />
+                    ) : assessment.level === 'safe' ? (
+                      <ShieldCheck size={14} />
+                    ) : assessment.level === 'neutral' ? (
+                      <HelpCircle size={14} />
                     ) : (
-                      <ShieldCheck size={13} />
+                      <AlertTriangle size={14} />
                     )}
                   </div>
                   <div>
@@ -1473,7 +1716,7 @@ function WebcamView() {
               </>
             ) : (
               <div className="empty-results" style={{ paddingTop: 40 }}>
-                <Camera size={28} strokeWidth={1} style={{ color: 'var(--border-2)' }} />
+                <Camera size={28} strokeWidth={1} style={{ color: 'var(--icon-muted)' }} />
                 <p>Start the camera to see live detection results.</p>
               </div>
             )}
@@ -1500,12 +1743,7 @@ function HistoryView({
   error: string
   retry: () => void
 }) {
-  const assessment = (item: Inspection) => {
-    if (typeof item.safety_assessment === 'object' && item.safety_assessment?.violations?.length) {
-      return 'violation'
-    }
-    return 'safe'
-  }
+  const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null)
 
   return (
     <>
@@ -1514,7 +1752,7 @@ function HistoryView({
           <div className="page-title">
             <h1>Analysis history</h1>
           </div>
-          <div className="page-subtitle">All inspection records returned by the backend.</div>
+          <div className="page-subtitle">All inspection records returned by the backend. Click any record to inspect details.</div>
         </div>
         <div className="page-actions">
           <button className="btn btn-secondary" onClick={retry}>
@@ -1540,7 +1778,7 @@ function HistoryView({
             </div>
           ) : inspections.length === 0 ? (
             <div style={{ padding: 50, textAlign: 'center', color: 'var(--text-4)' }}>
-              <Clock size={28} strokeWidth={1} style={{ margin: '0 auto 10px', color: 'var(--border-2)' }} />
+              <Clock size={28} strokeWidth={1} style={{ margin: '0 auto 10px', color: 'var(--icon-muted)' }} />
               <p style={{ fontSize: 13, color: 'var(--text-3)' }}>No inspections recorded yet.</p>
               <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 4 }}>
                 Inspections will appear here as you run analysis.
@@ -1559,17 +1797,32 @@ function HistoryView({
               </thead>
               <tbody>
                 {inspections.map((item, i) => {
-                  const level = assessment(item)
+                  const objCount = item.detections?.length ?? item.detected_objects ?? 0
+                  const info = getAssessmentInfo(item.safety_assessment, objCount)
+                  const tagClass = info.level === 'violation' ? 'tag-red' : info.level === 'neutral' ? 'tag-gray' : 'tag-green'
                   return (
-                    <tr key={item.inspection_id ?? i}>
+                    <tr
+                      key={item.inspection_id ?? i}
+                      className="clickable-row"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`View inspection record from ${item.created_at ? new Date(item.created_at).toLocaleString() : 'record'}`}
+                      onClick={() => setSelectedInspection(item)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setSelectedInspection(item)
+                        }
+                      }}
+                    >
                       <td>{item.created_at ? new Date(item.created_at).toLocaleString() : '—'}</td>
                       <td>
                         <span className="tag tag-gray">{item.source || 'image'}</span>
                       </td>
-                      <td>{item.detections?.length ?? item.detected_objects ?? 0}</td>
+                      <td>{objCount}</td>
                       <td>
-                        <span className={`tag ${level === 'violation' ? 'tag-red' : 'tag-green'}`}>
-                          {level === 'violation' ? 'Violation' : 'Clear'}
+                        <span className={`tag ${tagClass}`}>
+                          {info.level === 'violation' ? 'Violation' : info.level === 'neutral' ? 'Unverified' : 'Clear'}
                         </span>
                       </td>
                       <td style={{ fontSize: 11, color: 'var(--text-4)' }}>
@@ -1583,6 +1836,117 @@ function HistoryView({
           )}
         </div>
       </div>
+
+      {/* Inspection Detail Modal */}
+      {selectedInspection && (
+        <div
+          className="inspection-modal-overlay"
+          onClick={() => setSelectedInspection(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Inspection record details"
+        >
+          <div className="inspection-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="inspection-modal-header">
+              <div className="inspection-modal-title">
+                <ShieldCheck size={16} />
+                <span>Inspection #{selectedInspection.inspection_id?.slice(0, 8) || 'Audit'}</span>
+                <span className={`tag ${
+                  getAssessmentInfo(selectedInspection.safety_assessment, selectedInspection.detections?.length ?? selectedInspection.detected_objects ?? 0).level === 'violation' ? 'tag-red' : 'tag-green'
+                }`}>
+                  {getAssessmentInfo(selectedInspection.safety_assessment, selectedInspection.detections?.length ?? selectedInspection.detected_objects ?? 0).title}
+                </span>
+              </div>
+              <button
+                className="icon-btn"
+                aria-label="Close modal"
+                onClick={() => setSelectedInspection(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="inspection-modal-body">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-4)', textTransform: 'uppercase', display: 'block', marginBottom: 2, fontWeight: 600 }}>Timestamp</span>
+                  <span style={{ fontWeight: 600 }}>{selectedInspection.created_at ? new Date(selectedInspection.created_at).toLocaleString() : '—'}</span>
+                </div>
+                <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-4)', textTransform: 'uppercase', display: 'block', marginBottom: 2, fontWeight: 600 }}>Source</span>
+                  <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{selectedInspection.source || 'Static Image'}</span>
+                </div>
+                <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-4)', textTransform: 'uppercase', display: 'block', marginBottom: 2, fontWeight: 600 }}>Model Version</span>
+                  <span style={{ fontWeight: 600 }}>{selectedInspection.model_version || 'YOLOv8'}</span>
+                </div>
+                <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-4)', textTransform: 'uppercase', display: 'block', marginBottom: 2, fontWeight: 600 }}>Total Objects</span>
+                  <span style={{ fontWeight: 600 }}>{selectedInspection.detections?.length ?? selectedInspection.detected_objects ?? 0} detections</span>
+                </div>
+              </div>
+
+              {selectedInspection.detections && selectedInspection.detections.length > 0 ? (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-4)', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Detected Entities ({selectedInspection.detections.length})
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+                    {selectedInspection.detections.map((d, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '7px 10px',
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500, fontSize: 12 }}>
+                          <ObjectIcon className={d.class_name} />
+                          {d.class_name}
+                        </span>
+                        <span className={`object-conf ${confClass(d.confidence)}`}>
+                          {Math.round(d.confidence * 100)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                  {getAssessmentInfo(selectedInspection.safety_assessment, 0).detail}
+                </p>
+              )}
+            </div>
+
+            <div className="inspection-modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(selectedInspection, null, 2))
+                  const dl = document.createElement('a')
+                  dl.setAttribute('href', dataStr)
+                  dl.setAttribute('download', `inspection-${selectedInspection.inspection_id || 'record'}.json`)
+                  dl.click()
+                }}
+              >
+                <Download size={13} />
+                Export JSON
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => setSelectedInspection(null)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
@@ -1652,6 +2016,7 @@ function ModelsView({ health }: { health: HealthResponse | null }) {
 /* ─── Root Component ─── */
 export default function Page() {
   const [view, setView] = useState<View>('landing')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [health, setHealth] = useState<HealthResponse | null>(null)
   const [inspections, setInspections] = useState<Inspection[]>([])
   const [histLoading, setHistLoading] = useState(false)
@@ -1708,9 +2073,81 @@ export default function Page() {
     <div className="app-shell">
       <Sidebar view={view} setView={setView} health={health} />
 
+      {/* Mobile Drawer Navigation */}
+      {mobileMenuOpen && (
+        <div
+          className="mobile-drawer-overlay"
+          onClick={() => setMobileMenuOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation drawer"
+        >
+          <div className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-drawer-header">
+              <div
+                className="sidebar-logo"
+                style={{ padding: 0, border: 'none', cursor: 'pointer' }}
+                onClick={() => {
+                  setView('landing')
+                  setMobileMenuOpen(false)
+                }}
+              >
+                <img src="/logo.png" alt="SafeSight Logo" className="logo-icon-img" />
+                <span className="logo-name">
+                  SafeSight <span>AI</span>
+                </span>
+              </div>
+              <button
+                className="icon-btn"
+                aria-label="Close navigation menu"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="sidebar-section">
+              <div className="sidebar-label">Workspace</div>
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  className={`sidebar-item ${view === item.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setView(item.id)
+                    setMobileMenuOpen(false)
+                  }}
+                >
+                  <item.icon size={15} className="item-icon" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <div className="sidebar-bottom">
+              <button
+                className="sidebar-item"
+                onClick={() => {
+                  setView('landing')
+                  setMobileMenuOpen(false)
+                }}
+              >
+                <HelpCircle size={15} className="item-icon" />
+                Safety workspace guide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="main-content">
         {/* Top bar */}
         <div className="topbar">
+          <button
+            className="mobile-menu-btn"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
           <div className="topbar-breadcrumb">
             <span>Workspace</span>
             <span className="sep">

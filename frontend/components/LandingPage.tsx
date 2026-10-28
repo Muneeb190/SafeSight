@@ -444,7 +444,7 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
           <div className="step-card">
             <div className="step-badge">Step 1</div>
             <div className="step-content">
-              <h4>Choose an Inspection Mode</h4>
+              <h3>Choose an Inspection Mode</h3>
               <p>
                 From the workspace sidebar, select <strong>Image analysis</strong> for quick photo uploads, <strong>Video analysis</strong> for CCTV footage, or <strong>Live webcam</strong> for real-time monitoring.
               </p>
@@ -456,7 +456,7 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
           <div className="step-card">
             <div className="step-badge">Step 2</div>
             <div className="step-content">
-              <h4>Calibrate Confidence Sensitivity</h4>
+              <h3>Calibrate Confidence Sensitivity</h3>
               <p>
                 Adjust the sensitivity slider (default 0.25, bounded between 0.05 and 0.95). Increase confidence for high-light closeups, or decrease it for distant wide-angle surveillance cameras.
               </p>
@@ -468,7 +468,7 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
           <div className="step-card">
             <div className="step-badge">Step 3</div>
             <div className="step-content">
-              <h4>Run Detection &amp; Review Visual Overlay</h4>
+              <h3>Run Detection &amp; Review Visual Overlay</h3>
               <p>
                 Click <strong>Run Inspection</strong>. The YOLO model identifies each safety element with pixel-precise bounding boxes, class labels, and certainty percentages in under 100 milliseconds.
               </p>
@@ -480,7 +480,7 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
           <div className="step-card">
             <div className="step-badge">Step 4</div>
             <div className="step-content">
-              <h4>Inspect Verdict &amp; Export Audit Log</h4>
+              <h3>Inspect Verdict &amp; Export Audit Log</h3>
               <p>
                 View the safety assessment breakdown (Compliant vs Potential Violation). Download the annotated media file or view historic compliance rates in the <strong>Analysis history</strong> tab.
               </p>
@@ -504,7 +504,7 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
             <div className="expect-icon green">
               <CheckCircle2 size={22} />
             </div>
-            <h4>What the System Delivers</h4>
+            <h3>What the System Delivers</h3>
             <ul>
               <li>
                 <strong>Instant visual markers:</strong> Highlighting hard hats, reflective vests, protective boots, and workers with colored bounding boxes.
@@ -525,7 +525,7 @@ export default function LandingPage({ health, onEnterWorkspace }: LandingPagePro
             <div className="expect-icon amber">
               <AlertTriangle size={22} />
             </div>
-            <h4>Responsible Safety Guidelines</h4>
+            <h3>Responsible Safety Guidelines</h3>
             <ul>
               <li>
                 <strong>Human-in-the-Loop review:</strong> SafeSight is an automated detection assistant designed to accelerate hazard detection, not replace certified safety inspectors.
